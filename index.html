@@ -87,6 +87,14 @@
 
     window.onload = async function() {
       try {
+        // URLパラメータから日付取得（なければデフォルト計算）
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('date') && /^\d{4}-\d{2}-\d{2}$/.test(urlParams.get('date'))) {
+          targetDate = urlParams.get('date');
+        } else {
+          targetDate = getDefaultTargetDate();
+        }
+
         // LIFF初期化
         await liff.init({ liffId: LIFF_ID });
 
@@ -95,21 +103,12 @@
           return;
         }
 
-        // ログイン後にID Tokenを取得
         idToken = liff.getIDToken();
         if (!idToken) {
           throw new Error('LINE認証トークンを取得できませんでした。');
         }
 
-        // URLパラメータから日付取得（なければ自動計算）
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('date') && /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(urlParams.get('date'))) {
-          targetDate = urlParams.get('date').replace(/\//g, '-');
-        } else {
-          targetDate = getDefaultTargetDate();
-        }
-
-        // 認証完了後にデータ取得
+        // サーバーから集計状況を取得
         await loadData();
 
       } catch (error) {
@@ -136,6 +135,11 @@
         });
 
         const data = await res.json();
+
+        console.log('GASから取得したデータ:', data);
+        console.log('targetDate:', targetDate);
+        console.log('idToken:', idToken ? '取得済み' : 'なし');
+
         renderUI(data);
       } catch (err) {
         console.error('通信エラー:', err);
