@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>バドミントン出欠確認</title>
+
+  <!-- LIFF SDK -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { margin: 0; padding: 16px; background-color: #f5f7fa; color: #333; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    h2 { font-size: 1.1rem; margin: 0 0 8px 0; color: #111; }
+    .date-badge { display: inline-block; background: #e8f5e9; color: #2e7d32; font-weight: bold; padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; }
+    .status-badge { font-weight: bold; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; display: inline-block; }
+    .status-attend { background: #e3f2fd; color: #1976d2; }
+    .status-absent { background: #ffebee; color: #d32f2f; }
+    .status-none { background: #eeeeee; color: #757575; }
+    .btn-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+    button { border: none; border-radius: 8px; padding: 12px 0; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-attend { background: #2b7fff; color: white; }
+    .btn-absent { width: 100%; margin-top: 10px; background: #f0f2f5; color: #555; }
+    .attendee-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
+    .attendee-item:last-child { border-bottom: none; }
+    #loading { text-align: center; padding: 40px; color: #666; font-size: 0.9rem; }
+    .toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.85rem; z-index: 100; max-width: 90%; text-align: center; }
+    .error { text-align: center; padding: 40px 20px; color: #c62828; }
+  </style>
+</head>
+<body>
+
+  <div id="loading">データを読み込み中...</div>
+  <div id="error" class="error" style="display:none;"></div>
+
+  <div id="main-content" style="display:none;">
+    <!-- 開催日 & 自分の状態 -->
+    <div class="card">
+      <div class="date-badge" id="event-date">開催日: 読み込み中</div>
+      <h2>あなたの現在の回答</h2>
+      <div style="margin-top: 8px;">
+        <span id="my-status" class="status-badge status-none">未回答</span>
+      </div>
+    </div>
+
+    <!-- 投票エリア -->
+    <div class="card">
+      <h2>出欠を登録・変更</h2>
+      <div style="font-size: 0.8rem; color: #666; margin-top: 4px;">▼ 参加する人数を選択</div>
+      <div class="btn-group">
+        <button class="btn-attend vote-button" onclick="onVote('参加', 1)">1人</button>
+        <button class="btn-attend vote-button" onclick="onVote('参加', 2)">2人</button>
+        <button class="btn-attend vote-button" onclick="onVote('参加', 3)">3人</button>
+        <button class="btn-attend vote-button" onclick="onVote('参加', 4)">4人</button>
+      </div>
+      <button class="btn-absent vote-button" onclick="onVote('不参加', 0)">不参加にする</button>
+    </div>
+
+    <!-- 全体の参加状況 -->
+    <div class="card">
+      <h2>現在の参加者状況</h2>
+      <div style="font-size: 0.85rem; color: #444; margin-bottom: 12px;" id="summary-text">
+        総参加人数: 0名 (0組)
+      </div>
+      <div id="attendee-list"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ==========================================
+    // 設定（ここをご自身の環境に合わせて書き換えてください）
+    // ==========================================
+    const LIFF_ID = "2011243364-Jx2wZwK4"; // あなたの LIFF ID
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyzLUn1pulwe7WwjtQtBF5mUOwPZuEm20AjD42oUrL-KiYWyfE2_UZvdkReY8j1v2PG/exec"; // あなたの GAS WebアプリURL (/exec)
+
+    // ==========================================
+    // 状態管理
+    // ==========================================
+    let idToken = '';
+    let targetDate = '';
+    let isSubmitting = false;
+
+    window.onload = async function() {
+      try {
+        // URLパラメータから日付取得（なければデフォルト計算）
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('date') && /^\d{4}-\d{2}-\d{2}$/.test(urlParams.get('date'))) {
+          targetDate = urlParams.get('date');
+        } else {
+          targetDate = getDefaultTargetDate();
+        }
+
+        // LIFF初期化
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+
+        idToken = liff.getIDToken();
+        if (!idToken) {
+          throw new Error('LINE認証トークンを取得できませんでした。');
+        }
+
+        // サーバーから集計状況を取得
+        await loadData();
+
+      } catch (error) {
+        console.error('初期化エラー:', error);
+        showError('初期化に失敗しました: ' + (error.message || JSON.stringify(error)));
+      }
+    };
+
+    // ==========================================
+    // API通信 (fetch)
+    // ==========================================
+    async function loadData() {
+      document.getElementById('event-date').innerText = '開催日: ' + targetDate;
+
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' }, // CORS preflight回避のため text/plain で送信
+          body: JSON.stringify({
+            action: 'getSummary',
+            date: targetDate,
+            idToken: idToken
+          })
+        });
+
+        const data = await res.json();
+        renderUI(data);
+      } catch (err) {
+        console.error('通信エラー:', err);
+        showError('データ取得に失敗しました。電波の良い場所で再度お試しください。');
+      }
+    }
+
+    async function onVote(status, count) {
+      if (isSubmitting) return;
+
+      isSubmitting = true;
+      setVoteButtonsDisabled(true);
+      showToast('回答を送信中...');
+
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: 'submitAttendance',
+            date: targetDate,
+            idToken: idToken,
+            status: status,
+            count: count
+          })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          showToast('回答を保存しました！');
+          await loadData(); // 画面を最新化
+          setTimeout(() => {
+            if (liff.isInClient()) {
+              liff.closeWindow(); // LINEアプリ内なら自動で閉じる
+            }
+          }, 1000);
+        } else {
+          alert('保存エラー: ' + result.message);
+        }
+      } catch (err) {
+        console.error('送信エラー:', err);
+        alert('送信中にエラーが発生しました。');
+      } finally {
+        isSubmitting = false;
+        setVoteButtonsDisabled(false);
+      }
+    }
+
+    // ==========================================
+    // UI レンダリング
+    // ==========================================
+    function renderUI(data) {
+      if (!data || !data.success) {
+        showError(data ? data.message : 'データ解析に失敗しました。');
+        return;
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+
+      // 自分の状態
+      const statusEl = document.getElementById('my-status');
+      if (data.myStatus === '参加') {
+        statusEl.className = 'status-badge status-attend';
+        statusEl.innerText = `参加 (${data.myCount}名)`;
+      } else if (data.myStatus === '不参加') {
+        statusEl.className = 'status-badge status-absent';
+        statusEl.innerText = '不参加';
+      } else {
+        statusEl.className = 'status-badge status-none';
+        statusEl.innerText = '未回答';
+      }
+
+      // 集計テキスト
+      document.getElementById('summary-text').innerText =
+        `総参加人数: ${data.totalHeadCount}名 (${data.totalGroups}組) / 不参加: ${data.absentGroupCount}組`;
+
+      // 参加者リスト
+      const listEl = document.getElementById('attendee-list');
+      listEl.innerHTML = '';
+
+      if (!data.attendeeList || data.attendeeList.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.fontSize = '0.85rem';
+        empty.style.color = '#888';
+        empty.textContent = '現在の参加予定者はいません';
+        listEl.appendChild(empty);
+      } else {
+        data.attendeeList.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'attendee-item';
+          const name = document.createElement('span');
+          name.textContent = item.name;
+          const count = document.createElement('strong');
+          count.textContent = `${item.count}名`;
+          div.appendChild(name);
+          div.appendChild(count);
+          listEl.appendChild(div);
+        });
+      }
+    }
+
+    function setVoteButtonsDisabled(disabled) {
+      document.querySelectorAll('.vote-button').forEach(btn => {
+        btn.disabled = disabled;
+      });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+
+    function showError(message) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('main-content').style.display = 'none';
+      const errorEl = document.getElementById('error');
+      errorEl.innerText = message;
+      errorEl.style.display = 'block';
+    }
+
+    function getDefaultTargetDate() {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = (6 - day + 7) % 7 || 7;
+      d.setDate(d.getDate() + diff);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  </script>
+</body>
+</html>
