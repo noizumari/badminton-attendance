@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -9,6 +11,9 @@
   >
 
   <title>バドミントン出欠確認</title>
+
+
+  <!-- LIFF SDK -->
 
   <script
     charset="utf-8"
@@ -95,7 +100,8 @@
 
     .btn-group {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns:
+        repeat(4, 1fr);
       gap: 8px;
       margin-top: 10px;
     }
@@ -141,7 +147,8 @@
       display: flex;
       justify-content: space-between;
       padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom:
+        1px solid #f0f0f0;
       font-size: 0.9rem;
     }
 
@@ -182,39 +189,22 @@
       color: #c62828;
     }
 
-
-    /* ======================================
-       デバッグ表示
-       ====================================== */
-
-    #debug-card {
-      background: #fff8e1;
-      border: 1px solid #ffe082;
-    }
-
-
-    #debug-info {
-      margin: 0;
-      padding: 12px;
-      background: #fff;
-      border-radius: 8px;
-      font-size: 12px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-all;
-      overflow-x: auto;
-    }
-
   </style>
+
 </head>
 
 
 <body>
 
+
+  <!-- 読み込み中 -->
+
   <div id="loading">
     データを読み込み中...
   </div>
 
+
+  <!-- エラー -->
 
   <div
     id="error"
@@ -223,15 +213,15 @@
   ></div>
 
 
+  <!-- メイン -->
+
   <div
     id="main-content"
     style="display:none;"
   >
 
 
-    <!-- ==================================
-         開催日 & 自分の状態
-         ================================== -->
+    <!-- 開催日・自分の回答 -->
 
     <div class="card">
 
@@ -262,9 +252,7 @@
     </div>
 
 
-    <!-- ==================================
-         投票
-         ================================== -->
+    <!-- 出欠登録 -->
 
     <div class="card">
 
@@ -274,13 +262,18 @@
 
 
       <div
-        style="font-size: 0.8rem; color: #666; margin-top: 4px;"
+        style="
+          font-size: 0.8rem;
+          color: #666;
+          margin-top: 4px;
+        "
       >
         ▼ 参加する人数を選択
       </div>
 
 
       <div class="btn-group">
+
 
         <button
           class="btn-attend vote-button"
@@ -313,6 +306,7 @@
           4人
         </button>
 
+
       </div>
 
 
@@ -326,9 +320,7 @@
     </div>
 
 
-    <!-- ==================================
-         全体の参加状況
-         ================================== -->
+    <!-- 全体の参加状況 -->
 
     <div class="card">
 
@@ -338,8 +330,12 @@
 
 
       <div
-        style="font-size: 0.85rem; color: #444; margin-bottom: 12px;"
         id="summary-text"
+        style="
+          font-size: 0.85rem;
+          color: #444;
+          margin-bottom: 12px;
+        "
       >
         総参加人数: 0名 (0組)
       </div>
@@ -350,29 +346,10 @@
     </div>
 
 
-    <!-- ==================================
-         デバッグ情報
-         ================================== -->
-
-    <div
-      id="debug-card"
-      class="card"
-    >
-
-      <h2>
-        🔧 デバッグ情報
-      </h2>
-
-
-      <pre id="debug-info">
-取得中...
-      </pre>
-
-    </div>
-
-
   </div>
 
+
+  <!-- トースト -->
 
   <div
     id="toast"
@@ -382,6 +359,7 @@
 
   <script>
 
+
     // ==========================================
     // 設定
     // ==========================================
@@ -389,10 +367,8 @@
     const LIFF_ID = "2011243364-Jx2wZwK4"; // あなたの LIFF ID
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyzLUn1pulwe7WwjtQtBF5mUOwPZuEm20AjD42oUrL-KiYWyfE2_UZvdkReY8j1v2PG/exec"; // あなたの GAS WebアプリURL (/exec)
 
-
-
     // ==========================================
-    // 状態管理
+    // 状態
     // ==========================================
 
     let idToken = '';
@@ -410,6 +386,7 @@
 
       try {
 
+
         // --------------------------------------
         // URLから開催日取得
         // --------------------------------------
@@ -420,20 +397,24 @@
           );
 
 
+        const urlDate =
+          urlParams.get('date');
+
+
         if (
-          urlParams.has('date') &&
-          /^\d{4}-\d{2}-\d{2}$/.test(
-            urlParams.get('date')
-          )
+          urlDate &&
+          /^\d{4}-\d{2}-\d{2}$/.test(urlDate)
         ) {
 
-          targetDate =
-            urlParams.get('date');
+          targetDate = urlDate;
 
-        } else {
+        }
+
+        else {
 
           targetDate =
             getDefaultTargetDate();
+
         }
 
 
@@ -442,18 +423,27 @@
         // --------------------------------------
 
         await liff.init({
+
           liffId: LIFF_ID
+
         });
 
+
+        // --------------------------------------
+        // ログイン確認
+        // --------------------------------------
 
         if (!liff.isLoggedIn()) {
 
           liff.login({
+
             redirectUri:
               window.location.href
+
           });
 
           return;
+
         }
 
 
@@ -470,6 +460,7 @@
           throw new Error(
             'LINE認証トークンを取得できませんでした。'
           );
+
         }
 
 
@@ -480,7 +471,9 @@
         await loadData();
 
 
-      } catch (error) {
+      }
+
+      catch (error) {
 
         console.error(
           '初期化エラー:',
@@ -489,13 +482,11 @@
 
 
         showError(
-          '初期化に失敗しました: ' +
-          (
-            error.message ||
-            JSON.stringify(error)
-          )
+          '初期化に失敗しました。'
         );
+
       }
+
     };
 
 
@@ -505,6 +496,7 @@
 
     async function loadData() {
 
+
       document.getElementById(
         'event-date'
       ).innerText =
@@ -513,42 +505,41 @@
 
       try {
 
-        const requestBody = {
-
-          action:
-            'getSummary',
-
-          date:
-            targetDate,
-
-          idToken:
-            idToken
-        };
-
 
         const res =
           await fetch(
+
             GAS_API_URL,
+
             {
 
               method: 'POST',
 
               headers: {
+
                 'Content-Type':
                   'text/plain'
+
               },
 
               body:
-                JSON.stringify(
-                  requestBody
-                )
+                JSON.stringify({
+
+                  action:
+                    'getSummary',
+
+                  date:
+                    targetDate,
+
+                  idToken:
+                    idToken
+
+                })
+
             }
+
           );
 
-
-        // --------------------------------------
-        // HTTPステータス
-        // --------------------------------------
 
         if (!res.ok) {
 
@@ -556,6 +547,7 @@
             'HTTPエラー: ' +
             res.status
           );
+
         }
 
 
@@ -563,21 +555,12 @@
           await res.json();
 
 
-        // --------------------------------------
-        // デバッグ情報
-        // --------------------------------------
-
-        showDebugInfo(data);
-
-
-        // --------------------------------------
-        // UI描画
-        // --------------------------------------
-
         renderUI(data);
 
 
-      } catch (err) {
+      }
+
+      catch (err) {
 
         console.error(
           '通信エラー:',
@@ -586,77 +569,11 @@
 
 
         showError(
-          'データ取得に失敗しました。\n' +
-          (err.message || '')
-        );
-      }
-    }
-
-
-    // ==========================================
-    // デバッグ表示
-    // ==========================================
-
-    function showDebugInfo(data) {
-
-      const debugEl =
-        document.getElementById(
-          'debug-info'
+          'データ取得に失敗しました。'
         );
 
-
-      if (!debugEl) {
-        return;
       }
 
-
-      if (!data) {
-
-        debugEl.textContent =
-          'GASからデータが返ってきませんでした。';
-
-        return;
-      }
-
-
-      // ID Tokenそのものは表示しない
-      const debugData = {
-
-        htmlTargetDate:
-          targetDate,
-
-        gasSuccess:
-          data.success,
-
-        gasTargetDate:
-          data.targetDate,
-
-        myStatus:
-          data.myStatus,
-
-        myCount:
-          data.myCount,
-
-        totalHeadCount:
-          data.totalHeadCount,
-
-        totalGroups:
-          data.totalGroups,
-
-        absentGroupCount:
-          data.absentGroupCount,
-
-        debug:
-          data.debug || 'デバッグ情報なし'
-      };
-
-
-      debugEl.textContent =
-        JSON.stringify(
-          debugData,
-          null,
-          2
-        );
     }
 
 
@@ -669,6 +586,7 @@
       count
     ) {
 
+
       if (isSubmitting) {
         return;
       }
@@ -676,7 +594,11 @@
 
       isSubmitting = true;
 
-      setVoteButtonsDisabled(true);
+
+      setVoteButtonsDisabled(
+        true
+      );
+
 
       showToast(
         '回答を送信中...'
@@ -685,16 +607,21 @@
 
       try {
 
+
         const res =
           await fetch(
+
             GAS_API_URL,
+
             {
 
               method: 'POST',
 
               headers: {
+
                 'Content-Type':
                   'text/plain'
+
               },
 
               body:
@@ -714,8 +641,11 @@
 
                   count:
                     count
+
                 })
+
             }
+
           );
 
 
@@ -725,6 +655,7 @@
             'HTTPエラー: ' +
             res.status
           );
+
         }
 
 
@@ -734,17 +665,18 @@
 
         if (result.success) {
 
+
           showToast(
             '回答を保存しました！'
           );
 
 
-          // ----------------------------------
-          // 保存後に再取得
-          // ----------------------------------
+          // 最新状態を取得
 
           await loadData();
 
+
+          // LINE内なら少し待って閉じる
 
           setTimeout(
             () => {
@@ -754,6 +686,7 @@
               ) {
 
                 liff.closeWindow();
+
               }
 
             },
@@ -761,16 +694,21 @@
           );
 
 
-        } else {
+        }
+
+        else {
 
           alert(
             '保存エラー: ' +
             result.message
           );
+
         }
 
 
-      } catch (err) {
+      }
+
+      catch (err) {
 
         console.error(
           '送信エラー:',
@@ -779,19 +717,22 @@
 
 
         alert(
-          '送信中にエラーが発生しました。\n' +
-          (err.message || '')
+          '送信中にエラーが発生しました。'
         );
 
+      }
 
-      } finally {
+      finally {
 
         isSubmitting = false;
+
 
         setVoteButtonsDisabled(
           false
         );
+
       }
+
     }
 
 
@@ -801,20 +742,28 @@
 
     function renderUI(data) {
 
+
       if (
         !data ||
         !data.success
       ) {
 
         showError(
+
           data
             ? data.message
             : 'データ解析に失敗しました。'
+
         );
 
         return;
+
       }
 
+
+      // --------------------------------------
+      // 表示切り替え
+      // --------------------------------------
 
       document.getElementById(
         'loading'
@@ -835,7 +784,7 @@
 
 
       // --------------------------------------
-      // 自分の状態
+      // 自分の回答
       // --------------------------------------
 
       const statusEl =
@@ -848,36 +797,47 @@
         data.myStatus === '参加'
       ) {
 
+
         statusEl.className =
           'status-badge status-attend';
+
 
         statusEl.innerText =
           `参加 (${data.myCount}名)`;
 
 
-      } else if (
+      }
+
+      else if (
         data.myStatus === '不参加'
       ) {
 
+
         statusEl.className =
           'status-badge status-absent';
+
 
         statusEl.innerText =
           '不参加';
 
 
-      } else {
+      }
+
+      else {
+
 
         statusEl.className =
           'status-badge status-none';
 
+
         statusEl.innerText =
           '未回答';
+
       }
 
 
       // --------------------------------------
-      // 集計
+      // 全体集計
       // --------------------------------------
 
       document.getElementById(
@@ -890,7 +850,7 @@
 
 
       // --------------------------------------
-      // 参加者リスト
+      // 参加者一覧
       // --------------------------------------
 
       const listEl =
@@ -907,6 +867,7 @@
         data.attendeeList.length === 0
       ) {
 
+
         const empty =
           document.createElement(
             'div'
@@ -916,8 +877,10 @@
         empty.style.fontSize =
           '0.85rem';
 
+
         empty.style.color =
           '#888';
+
 
         empty.textContent =
           '現在の参加予定者はいません';
@@ -928,55 +891,67 @@
         );
 
 
-      } else {
+        return;
 
-        data.attendeeList.forEach(
-          item => {
-
-            const div =
-              document.createElement(
-                'div'
-              );
-
-
-            div.className =
-              'attendee-item';
-
-
-            const name =
-              document.createElement(
-                'span'
-              );
-
-
-            name.textContent =
-              item.name;
-
-
-            const count =
-              document.createElement(
-                'strong'
-              );
-
-
-            count.textContent =
-              `${item.count}名`;
-
-
-            div.appendChild(name);
-
-            div.appendChild(count);
-
-
-            listEl.appendChild(div);
-          }
-        );
       }
+
+
+      data.attendeeList.forEach(
+        item => {
+
+
+          const div =
+            document.createElement(
+              'div'
+            );
+
+
+          div.className =
+            'attendee-item';
+
+
+          const name =
+            document.createElement(
+              'span'
+            );
+
+
+          name.textContent =
+            item.name;
+
+
+          const count =
+            document.createElement(
+              'strong'
+            );
+
+
+          count.textContent =
+            `${item.count}名`;
+
+
+          div.appendChild(
+            name
+          );
+
+
+          div.appendChild(
+            count
+          );
+
+
+          listEl.appendChild(
+            div
+          );
+
+        }
+      );
+
     }
 
 
     // ==========================================
-    // ボタン制御
+    // ボタン無効化
     // ==========================================
 
     function setVoteButtonsDisabled(
@@ -989,15 +964,18 @@
         )
         .forEach(
           btn => {
+
             btn.disabled =
               disabled;
+
           }
         );
+
     }
 
 
     // ==========================================
-    // Toast
+    // トースト
     // ==========================================
 
     function showToast(
@@ -1027,11 +1005,12 @@
         },
         2000
       );
+
     }
 
 
     // ==========================================
-    // エラー
+    // エラー表示
     // ==========================================
 
     function showError(
@@ -1062,6 +1041,7 @@
 
       errorEl.style.display =
         'block';
+
     }
 
 
@@ -1095,21 +1075,29 @@
       const mm =
         String(
           d.getMonth() + 1
-        ).padStart(2, '0');
+        ).padStart(
+          2,
+          '0'
+        );
 
 
       const dd =
         String(
           d.getDate()
-        ).padStart(2, '0');
+        ).padStart(
+          2,
+          '0'
+        );
 
 
       return (
         `${yyyy}-${mm}-${dd}`
       );
+
     }
 
   </script>
 
 </body>
+
 </html>
