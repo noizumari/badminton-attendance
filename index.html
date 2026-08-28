@@ -9,8 +9,10 @@
 
   <!-- LIFF SDK -->
 
-  <script charset="utf-8"
-    src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script
+    charset="utf-8"
+    src="https://static.line-scdn.net/liff/edge/2/sdk.js">
+  </script>
 
   <style>
     * {
@@ -35,7 +37,7 @@
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 
     h2 {
@@ -150,6 +152,7 @@
     .error-message {
       font-size: 0.9rem;
       line-height: 1.6;
+      white-space: pre-line;
     }
 
     .toast {
@@ -158,7 +161,7 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.8);
+      background: rgba(0, 0, 0, 0.8);
       color: white;
       padding: 10px 20px;
       border-radius: 20px;
@@ -188,12 +191,13 @@
 
   <!-- エラー -->
 
-  <div id="error" class="error" style="display:none;">
-    <div class="error-title">
-      データを読み込めませんでした
-    </div>
+  <div id="error" class="error" style="display: none;">
 
 ```
+<div class="error-title">
+  データを読み込めませんでした
+</div>
+
 <div id="error-message" class="error-message"></div>
 
 <button
@@ -207,7 +211,7 @@
 
   <!-- メインコンテンツ -->
 
-  <div id="main-content" style="display:none;">
+  <div id="main-content" style="display: none;">
 
 ```
 <!-- 開催日・自分の回答 -->
@@ -224,17 +228,14 @@
   </h2>
 
   <div style="margin-top: 8px;">
-
     <span
       id="my-status"
       class="status-badge status-none">
       未回答
     </span>
-
   </div>
 
 </div>
-
 
 <!-- 投票エリア -->
 <div class="card">
@@ -251,7 +252,6 @@
     ">
     ▼ 参加する人数を選択
   </div>
-
 
   <div class="btn-group">
 
@@ -281,7 +281,6 @@
 
   </div>
 
-
   <button
     class="btn-absent vote-button"
     onclick="onVote('不参加', 0)">
@@ -289,7 +288,6 @@
   </button>
 
 </div>
-
 
 <!-- 全体の参加状況 -->
 <div class="card">
@@ -305,11 +303,8 @@
       margin-bottom: 12px;
     "
     id="summary-text">
-
     総参加人数: 0名 (0組)
-
   </div>
-
 
   <div id="attendee-list"></div>
 
@@ -331,8 +326,9 @@
     // 設定
     // ==========================================
 
-    const LIFF_ID = "2011243364-Jx2wZwK4"; // あなたの LIFF ID
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyzLUn1pulwe7WwjtQtBF5mUOwPZuEm20AjD42oUrL-KiYWyfE2_UZvdkReY8j1v2PG/exec"; // あなたの GAS WebアプリURL (/exec)
+    const LIFF_ID = "2011243364-Jx2wZwK4";
+
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyzLUn1pulwe7WwjtQtBF5mUOwPZuEm20AjD42oUrL-KiYWyfE2_UZvdkReY8j1v2PG/exec";
 
 
     // ==========================================
@@ -340,9 +336,7 @@
     // ==========================================
 
     let idToken = '';
-
     let targetDate = '';
-
     let isSubmitting = false;
 
 
@@ -350,7 +344,7 @@
     // 初期化
     // ==========================================
 
-    window.onload = async function() {
+    window.onload = async function () {
 
       try {
 
@@ -363,21 +357,21 @@
             window.location.search
           );
 
+        const urlDate =
+          urlParams.get('date');
 
         if (
-          urlParams.has('date') &&
-          /^\d{4}-\d{2}-\d{2}$/.test(
-            urlParams.get('date')
-          )
+          urlDate &&
+          /^\d{4}-\d{2}-\d{2}$/.test(urlDate)
         ) {
 
-          targetDate =
-            urlParams.get('date');
+          targetDate = urlDate;
 
         } else {
 
           targetDate =
             getDefaultTargetDate();
+
         }
 
 
@@ -412,7 +406,6 @@
         idToken =
           liff.getIDToken();
 
-
         if (!idToken) {
 
           throw new Error(
@@ -427,7 +420,6 @@
 
         await loadData();
 
-
       } catch (error) {
 
         console.error(
@@ -439,7 +431,6 @@
           getUserFriendlyErrorMessage(error)
         );
       }
-
     };
 
 
@@ -468,18 +459,12 @@
                   'text/plain'
               },
 
-              body: JSON.stringify({
-
-                action:
-                  'getSummary',
-
-                date:
-                  targetDate,
-
-                idToken:
-                  idToken
-
-              })
+              body:
+                JSON.stringify({
+                  action: 'getSummary',
+                  date: targetDate,
+                  idToken: idToken
+                })
             }
           );
 
@@ -531,7 +516,6 @@
 
         renderUI(data);
 
-
       } catch (error) {
 
         console.error(
@@ -543,7 +527,6 @@
           getUserFriendlyErrorMessage(error)
         );
       }
-
     }
 
 
@@ -563,11 +546,7 @@
 
       isSubmitting = true;
 
-
-      setVoteButtonsDisabled(
-        true
-      );
-
+      setVoteButtonsDisabled(true);
 
       showToast(
         '回答を送信中...'
@@ -587,24 +566,23 @@
                   'text/plain'
               },
 
-              body: JSON.stringify({
+              body:
+                JSON.stringify({
+                  action:
+                    'submitAttendance',
 
-                action:
-                  'submitAttendance',
+                  date:
+                    targetDate,
 
-                date:
-                  targetDate,
+                  idToken:
+                    idToken,
 
-                idToken:
-                  idToken,
+                  status:
+                    status,
 
-                status:
-                  status,
-
-                count:
-                  count
-
-              })
+                  count:
+                    count
+                })
             }
           );
 
@@ -627,6 +605,14 @@
 
         const result =
           await response.json();
+
+
+        if (!result) {
+
+          throw new Error(
+            'サーバーから正しい応答を取得できませんでした。'
+          );
+        }
 
 
         // --------------------------------------
@@ -653,20 +639,11 @@
 
         // --------------------------------------
         // 最新状態を再取得
+        //
+        // 回答後も画面を閉じない
         // --------------------------------------
 
         await loadData();
-
-
-        /*
-         * ここでは liff.closeWindow() を
-         * 実行しません。
-         *
-         * 回答後もそのまま画面に残り、
-         * 「自分の回答」と
-         * 「現在の参加者状況」を
-         * 確認できるようにします。
-         */
 
 
       } catch (error) {
@@ -676,22 +653,16 @@
           error
         );
 
-
         showError(
           getUserFriendlyErrorMessage(error)
         );
-
 
       } finally {
 
         isSubmitting = false;
 
-        setVoteButtonsDisabled(
-          false
-        );
-
+        setVoteButtonsDisabled(false);
       }
-
     }
 
 
@@ -709,11 +680,9 @@
         'loading'
       ).style.display = 'none';
 
-
       document.getElementById(
         'error'
       ).style.display = 'none';
-
 
       document.getElementById(
         'main-content'
@@ -769,7 +738,6 @@
       document.getElementById(
         'summary-text'
       ).innerText =
-
         `総参加人数: ${data.totalHeadCount}名 ` +
         `(${data.totalGroups}組) / ` +
         `不参加: ${data.absentGroupCount}組`;
@@ -783,7 +751,6 @@
         document.getElementById(
           'attendee-list'
         );
-
 
       listEl.innerHTML = '';
 
@@ -810,7 +777,6 @@
         listEl.appendChild(
           empty
         );
-
 
         return;
       }
@@ -858,14 +824,11 @@
             count
           );
 
-
           listEl.appendChild(
             div
           );
-
         }
       );
-
     }
 
 
@@ -887,7 +850,6 @@
               disabled;
           }
         );
-
     }
 
 
@@ -904,10 +866,8 @@
           'toast'
         );
 
-
       toast.innerText =
         message;
-
 
       toast.style.display =
         'block';
@@ -922,7 +882,6 @@
         },
         2000
       );
-
     }
 
 
@@ -939,7 +898,6 @@
       ).style.display =
         'none';
 
-
       document.getElementById(
         'main-content'
       ).style.display =
@@ -950,7 +908,6 @@
         document.getElementById(
           'error'
         );
-
 
       const messageEl =
         document.getElementById(
@@ -964,7 +921,6 @@
 
       errorEl.style.display =
         'block';
-
     }
 
 
@@ -990,7 +946,7 @@
 
 
       // --------------------------------------
-      // GASから返ってくる既知のエラー
+      // LINE認証関連
       // --------------------------------------
 
       if (
@@ -1000,8 +956,8 @@
       ) {
 
         return (
-          'LINEのユーザー認証に失敗しました。' +
-          '\nLINEアプリからもう一度開いてください。'
+          'LINEのユーザー認証に失敗しました。\n' +
+          'LINEアプリからもう一度開いてください。'
         );
       }
 
@@ -1013,35 +969,48 @@
       ) {
 
         return (
-          'LINEのユーザー認証に失敗しました。' +
-          '\nページを閉じて、もう一度お試しください。'
+          'LINEのユーザー認証に失敗しました。\n' +
+          'ページを閉じて、もう一度お試しください。'
         );
       }
 
 
       if (
         message.includes(
-          '開催日の形式'
+          'LINEユーザーID'
         )
       ) {
 
         return (
-          '開催日の情報が正しくありません。'
+          'LINEのユーザー情報を取得できませんでした。\n' +
+          'もう一度お試しください。'
         );
       }
 
 
+      // --------------------------------------
+      // 日付関連
+      // --------------------------------------
+
       if (
+        message.includes(
+          '開催日の形式'
+        ) ||
         message.includes(
           '存在しない開催日'
         )
       ) {
 
         return (
-          '開催日の情報が正しくありません。'
+          '開催日の情報が正しくありません。\n' +
+          'LINEグループの最新の案内から開いてください。'
         );
       }
 
+
+      // --------------------------------------
+      // 人数関連
+      // --------------------------------------
 
       if (
         message.includes(
@@ -1050,10 +1019,15 @@
       ) {
 
         return (
-          '参加人数の指定が正しくありません。'
+          '参加人数の指定が正しくありません。\n' +
+          '1～4人から選択してください。'
         );
       }
 
+
+      // --------------------------------------
+      // 不参加関連
+      // --------------------------------------
 
       if (
         message.includes(
@@ -1062,10 +1036,15 @@
       ) {
 
         return (
-          '出欠情報の指定が正しくありません。'
+          '出欠情報の指定が正しくありません。\n' +
+          'もう一度お試しください。'
         );
       }
 
+
+      // --------------------------------------
+      // アクセス集中
+      // --------------------------------------
 
       if (
         message.includes(
@@ -1074,11 +1053,15 @@
       ) {
 
         return (
-          '現在アクセスが集中しています。' +
-          '\n少し待ってからもう一度お試しください。'
+          '現在アクセスが集中しています。\n' +
+          '少し待ってからもう一度お試しください。'
         );
       }
 
+
+      // --------------------------------------
+      // 通信エラー
+      // --------------------------------------
 
       if (
         message.includes(
@@ -1086,12 +1069,15 @@
         ) ||
         message.includes(
           'Failed to fetch'
+        ) ||
+        message.includes(
+          'NetworkError'
         )
       ) {
 
         return (
-          'サーバーとの通信に失敗しました。' +
-          '\n電波の良い場所で、もう一度お試しください。'
+          'サーバーとの通信に失敗しました。\n' +
+          '電波の良い場所で、もう一度お試しください。'
         );
       }
 
@@ -1101,11 +1087,9 @@
       // --------------------------------------
 
       return (
-        message ||
-        '処理中にエラーが発生しました。' +
-        '\n時間をおいてもう一度お試しください。'
+        '処理中にエラーが発生しました。\n' +
+        '時間をおいて、もう一度お試しください。'
       );
-
     }
 
 
@@ -1113,6 +1097,9 @@
     // デフォルト開催日
     //
     // 毎週金曜日
+    //
+    // 金曜日に開いた場合は
+    // 「次の金曜日」を返す
     // ==========================================
 
     function getDefaultTargetDate() {
@@ -1120,15 +1107,12 @@
       const d =
         new Date();
 
-
       const day =
         d.getDay();
-
 
       // 金曜日 = 5
       const diff =
         (5 - day + 7) % 7 || 7;
-
 
       d.setDate(
         d.getDate() + diff
@@ -1138,7 +1122,6 @@
       const yyyy =
         d.getFullYear();
 
-
       const mm =
         String(
           d.getMonth() + 1
@@ -1146,7 +1129,6 @@
           2,
           '0'
         );
-
 
       const dd =
         String(
@@ -1160,7 +1142,6 @@
       return (
         `${yyyy}-${mm}-${dd}`
       );
-
     }
 
   </script>
