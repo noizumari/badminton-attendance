@@ -135,11 +135,6 @@
         });
 
         const data = await res.json();
-
-        console.log('GASから取得したデータ:', data);
-        console.log('targetDate:', targetDate);
-        console.log('idToken:', idToken ? '取得済み' : 'なし');
-
         renderUI(data);
       } catch (err) {
         console.error('通信エラー:', err);
