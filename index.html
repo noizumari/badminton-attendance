@@ -1,28 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="ja">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <title>バドミントン出欠確認</title>
 
-
   <!-- LIFF SDK -->
 
-  <script
-    charset="utf-8"
-    src="https://static.line-scdn.net/liff/edge/2/sdk.js"
-  ></script>
-
+  <script charset="utf-8"
+    src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-
     * {
       box-sizing: border-box;
       font-family:
@@ -33,7 +23,6 @@
         sans-serif;
     }
 
-
     body {
       margin: 0;
       padding: 16px;
@@ -41,23 +30,19 @@
       color: #333;
     }
 
-
     .card {
       background: #fff;
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
-      box-shadow:
-        0 2px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
-
 
     h2 {
       font-size: 1.1rem;
       margin: 0 0 8px 0;
       color: #111;
     }
-
 
     .date-badge {
       display: inline-block;
@@ -70,7 +55,6 @@
       margin-bottom: 12px;
     }
 
-
     .status-badge {
       font-weight: bold;
       padding: 4px 10px;
@@ -79,33 +63,27 @@
       display: inline-block;
     }
 
-
     .status-attend {
       background: #e3f2fd;
       color: #1976d2;
     }
-
 
     .status-absent {
       background: #ffebee;
       color: #d32f2f;
     }
 
-
     .status-none {
       background: #eeeeee;
       color: #757575;
     }
 
-
     .btn-group {
       display: grid;
-      grid-template-columns:
-        repeat(4, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       margin-top: 10px;
     }
-
 
     button {
       border: none;
@@ -117,23 +95,19 @@
       font-size: 0.95rem;
     }
 
-
     button:active {
       transform: scale(0.97);
     }
-
 
     button:disabled {
       opacity: 0.55;
       cursor: not-allowed;
     }
 
-
     .btn-attend {
       background: #2b7fff;
       color: white;
     }
-
 
     .btn-absent {
       width: 100%;
@@ -142,21 +116,17 @@
       color: #555;
     }
 
-
     .attendee-item {
       display: flex;
       justify-content: space-between;
       padding: 8px 0;
-      border-bottom:
-        1px solid #f0f0f0;
+      border-bottom: 1px solid #f0f0f0;
       font-size: 0.9rem;
     }
-
 
     .attendee-item:last-child {
       border-bottom: none;
     }
-
 
     #loading {
       text-align: center;
@@ -165,6 +135,22 @@
       font-size: 0.9rem;
     }
 
+    .error {
+      text-align: center;
+      padding: 40px 20px;
+      color: #c62828;
+    }
+
+    .error-title {
+      font-weight: bold;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .error-message {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
 
     .toast {
       display: none;
@@ -182,20 +168,17 @@
       text-align: center;
     }
 
-
-    .error {
-      text-align: center;
-      padding: 40px 20px;
-      color: #c62828;
+    .refresh-button {
+      width: 100%;
+      margin-top: 12px;
+      background: #f0f2f5;
+      color: #555;
     }
-
   </style>
 
 </head>
 
-
 <body>
-
 
   <!-- 読み込み中 -->
 
@@ -203,162 +186,146 @@
     データを読み込み中...
   </div>
 
-
   <!-- エラー -->
 
-  <div
-    id="error"
-    class="error"
-    style="display:none;"
-  ></div>
-
-
-  <!-- メイン -->
-
-  <div
-    id="main-content"
-    style="display:none;"
-  >
-
-
-    <!-- 開催日・自分の回答 -->
-
-    <div class="card">
-
-      <div
-        class="date-badge"
-        id="event-date"
-      >
-        開催日: 読み込み中
-      </div>
-
-
-      <h2>
-        あなたの現在の回答
-      </h2>
-
-
-      <div style="margin-top: 8px;">
-
-        <span
-          id="my-status"
-          class="status-badge status-none"
-        >
-          未回答
-        </span>
-
-      </div>
-
+  <div id="error" class="error" style="display:none;">
+    <div class="error-title">
+      データを読み込めませんでした
     </div>
 
+```
+<div id="error-message" class="error-message"></div>
 
-    <!-- 出欠登録 -->
-
-    <div class="card">
-
-      <h2>
-        出欠を登録・変更
-      </h2>
-
-
-      <div
-        style="
-          font-size: 0.8rem;
-          color: #666;
-          margin-top: 4px;
-        "
-      >
-        ▼ 参加する人数を選択
-      </div>
-
-
-      <div class="btn-group">
-
-
-        <button
-          class="btn-attend vote-button"
-          onclick="onVote('参加', 1)"
-        >
-          1人
-        </button>
-
-
-        <button
-          class="btn-attend vote-button"
-          onclick="onVote('参加', 2)"
-        >
-          2人
-        </button>
-
-
-        <button
-          class="btn-attend vote-button"
-          onclick="onVote('参加', 3)"
-        >
-          3人
-        </button>
-
-
-        <button
-          class="btn-attend vote-button"
-          onclick="onVote('参加', 4)"
-        >
-          4人
-        </button>
-
-
-      </div>
-
-
-      <button
-        class="btn-absent vote-button"
-        onclick="onVote('不参加', 0)"
-      >
-        不参加にする
-      </button>
-
-    </div>
-
-
-    <!-- 全体の参加状況 -->
-
-    <div class="card">
-
-      <h2>
-        現在の参加者状況
-      </h2>
-
-
-      <div
-        id="summary-text"
-        style="
-          font-size: 0.85rem;
-          color: #444;
-          margin-bottom: 12px;
-        "
-      >
-        総参加人数: 0名 (0組)
-      </div>
-
-
-      <div id="attendee-list"></div>
-
-    </div>
-
+<button
+  class="refresh-button"
+  onclick="location.reload()">
+  もう一度試す
+</button>
+```
 
   </div>
 
+  <!-- メインコンテンツ -->
+
+  <div id="main-content" style="display:none;">
+
+```
+<!-- 開催日・自分の回答 -->
+<div class="card">
+
+  <div
+    class="date-badge"
+    id="event-date">
+    開催日: 読み込み中
+  </div>
+
+  <h2>
+    あなたの現在の回答
+  </h2>
+
+  <div style="margin-top: 8px;">
+
+    <span
+      id="my-status"
+      class="status-badge status-none">
+      未回答
+    </span>
+
+  </div>
+
+</div>
+
+
+<!-- 投票エリア -->
+<div class="card">
+
+  <h2>
+    出欠を登録・変更
+  </h2>
+
+  <div
+    style="
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+    ">
+    ▼ 参加する人数を選択
+  </div>
+
+
+  <div class="btn-group">
+
+    <button
+      class="btn-attend vote-button"
+      onclick="onVote('参加', 1)">
+      1人
+    </button>
+
+    <button
+      class="btn-attend vote-button"
+      onclick="onVote('参加', 2)">
+      2人
+    </button>
+
+    <button
+      class="btn-attend vote-button"
+      onclick="onVote('参加', 3)">
+      3人
+    </button>
+
+    <button
+      class="btn-attend vote-button"
+      onclick="onVote('参加', 4)">
+      4人
+    </button>
+
+  </div>
+
+
+  <button
+    class="btn-absent vote-button"
+    onclick="onVote('不参加', 0)">
+    不参加にする
+  </button>
+
+</div>
+
+
+<!-- 全体の参加状況 -->
+<div class="card">
+
+  <h2>
+    現在の参加者状況
+  </h2>
+
+  <div
+    style="
+      font-size: 0.85rem;
+      color: #444;
+      margin-bottom: 12px;
+    "
+    id="summary-text">
+
+    総参加人数: 0名 (0組)
+
+  </div>
+
+
+  <div id="attendee-list"></div>
+
+</div>
+```
+
+  </div>
 
   <!-- トースト -->
 
   <div
     id="toast"
-    class="toast"
-  ></div>
-
+    class="toast">
+  </div>
 
   <script>
-
 
     // ==========================================
     // 設定
@@ -367,8 +334,9 @@
     const LIFF_ID = "2011243364-Jx2wZwK4"; // あなたの LIFF ID
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyzLUn1pulwe7WwjtQtBF5mUOwPZuEm20AjD42oUrL-KiYWyfE2_UZvdkReY8j1v2PG/exec"; // あなたの GAS WebアプリURL (/exec)
 
+
     // ==========================================
-    // 状態
+    // 状態管理
     // ==========================================
 
     let idToken = '';
@@ -386,9 +354,8 @@
 
       try {
 
-
         // --------------------------------------
-        // URLから開催日取得
+        // URLから開催日を取得
         // --------------------------------------
 
         const urlParams =
@@ -397,24 +364,20 @@
           );
 
 
-        const urlDate =
-          urlParams.get('date');
-
-
         if (
-          urlDate &&
-          /^\d{4}-\d{2}-\d{2}$/.test(urlDate)
+          urlParams.has('date') &&
+          /^\d{4}-\d{2}-\d{2}$/.test(
+            urlParams.get('date')
+          )
         ) {
 
-          targetDate = urlDate;
+          targetDate =
+            urlParams.get('date');
 
-        }
-
-        else {
+        } else {
 
           targetDate =
             getDefaultTargetDate();
-
         }
 
 
@@ -423,27 +386,22 @@
         // --------------------------------------
 
         await liff.init({
-
           liffId: LIFF_ID
-
         });
 
 
         // --------------------------------------
-        // ログイン確認
+        // LINEログイン確認
         // --------------------------------------
 
         if (!liff.isLoggedIn()) {
 
           liff.login({
-
             redirectUri:
               window.location.href
-
           });
 
           return;
-
         }
 
 
@@ -458,9 +416,8 @@
         if (!idToken) {
 
           throw new Error(
-            'LINE認証トークンを取得できませんでした。'
+            'LINEのユーザー認証情報を取得できませんでした。'
           );
-
         }
 
 
@@ -471,20 +428,16 @@
         await loadData();
 
 
-      }
-
-      catch (error) {
+      } catch (error) {
 
         console.error(
           '初期化エラー:',
           error
         );
 
-
         showError(
-          '初期化に失敗しました。'
+          getUserFriendlyErrorMessage(error)
         );
-
       }
 
     };
@@ -496,7 +449,6 @@
 
     async function loadData() {
 
-
       document.getElementById(
         'event-date'
       ).innerText =
@@ -505,73 +457,91 @@
 
       try {
 
-
-        const res =
+        const response =
           await fetch(
-
             GAS_API_URL,
-
             {
-
               method: 'POST',
 
               headers: {
-
                 'Content-Type':
                   'text/plain'
-
               },
 
-              body:
-                JSON.stringify({
+              body: JSON.stringify({
 
-                  action:
-                    'getSummary',
+                action:
+                  'getSummary',
 
-                  date:
-                    targetDate,
+                date:
+                  targetDate,
 
-                  idToken:
-                    idToken
+                idToken:
+                  idToken
 
-                })
-
+              })
             }
-
           );
 
 
-        if (!res.ok) {
+        // --------------------------------------
+        // HTTPエラー
+        // --------------------------------------
+
+        if (!response.ok) {
 
           throw new Error(
-            'HTTPエラー: ' +
-            res.status
+            'サーバーとの通信に失敗しました。'
           );
-
         }
 
 
-        const data =
-          await res.json();
+        // --------------------------------------
+        // JSON解析
+        // --------------------------------------
 
+        const data =
+          await response.json();
+
+
+        if (!data) {
+
+          throw new Error(
+            'サーバーから正しいデータを取得できませんでした。'
+          );
+        }
+
+
+        // --------------------------------------
+        // GAS側エラー
+        // --------------------------------------
+
+        if (!data.success) {
+
+          throw new Error(
+            data.message ||
+            'データの取得に失敗しました。'
+          );
+        }
+
+
+        // --------------------------------------
+        // UI更新
+        // --------------------------------------
 
         renderUI(data);
 
 
-      }
-
-      catch (err) {
+      } catch (error) {
 
         console.error(
-          '通信エラー:',
-          err
+          'データ取得エラー:',
+          error
         );
-
 
         showError(
-          'データ取得に失敗しました。'
+          getUserFriendlyErrorMessage(error)
         );
-
       }
 
     }
@@ -585,7 +555,6 @@
       status,
       count
     ) {
-
 
       if (isSubmitting) {
         return;
@@ -607,125 +576,115 @@
 
       try {
 
-
-        const res =
+        const response =
           await fetch(
-
             GAS_API_URL,
-
             {
-
               method: 'POST',
 
               headers: {
-
                 'Content-Type':
                   'text/plain'
-
               },
 
-              body:
-                JSON.stringify({
+              body: JSON.stringify({
 
-                  action:
-                    'submitAttendance',
+                action:
+                  'submitAttendance',
 
-                  date:
-                    targetDate,
+                date:
+                  targetDate,
 
-                  idToken:
-                    idToken,
+                idToken:
+                  idToken,
 
-                  status:
-                    status,
+                status:
+                  status,
 
-                  count:
-                    count
+                count:
+                  count
 
-                })
-
+              })
             }
-
           );
 
 
-        if (!res.ok) {
+        // --------------------------------------
+        // HTTPエラー
+        // --------------------------------------
+
+        if (!response.ok) {
 
           throw new Error(
-            'HTTPエラー: ' +
-            res.status
+            'サーバーとの通信に失敗しました。'
           );
-
         }
 
+
+        // --------------------------------------
+        // JSON解析
+        // --------------------------------------
 
         const result =
-          await res.json();
+          await response.json();
 
 
-        if (result.success) {
+        // --------------------------------------
+        // GAS側エラー
+        // --------------------------------------
 
+        if (!result.success) {
 
-          showToast(
-            '回答を保存しました！'
+          throw new Error(
+            result.message ||
+            '回答を保存できませんでした。'
           );
-
-
-          // 最新状態を取得
-
-          await loadData();
-
-
-          // LINE内なら少し待って閉じる
-
-          setTimeout(
-            () => {
-
-              if (
-                liff.isInClient()
-              ) {
-
-                liff.closeWindow();
-
-              }
-
-            },
-            1000
-          );
-
-
-        }
-
-        else {
-
-          alert(
-            '保存エラー: ' +
-            result.message
-          );
-
         }
 
 
-      }
+        // --------------------------------------
+        // 保存成功
+        // --------------------------------------
 
-      catch (err) {
+        showToast(
+          '回答を保存しました！'
+        );
+
+
+        // --------------------------------------
+        // 最新状態を再取得
+        // --------------------------------------
+
+        await loadData();
+
+
+        /*
+         * ここでは liff.closeWindow() を
+         * 実行しません。
+         *
+         * 回答後もそのまま画面に残り、
+         * 「自分の回答」と
+         * 「現在の参加者状況」を
+         * 確認できるようにします。
+         */
+
+
+      } catch (error) {
 
         console.error(
-          '送信エラー:',
-          err
+          '回答送信エラー:',
+          error
         );
 
 
-        alert(
-          '送信中にエラーが発生しました。'
+        showError(
+          getUserFriendlyErrorMessage(error)
         );
 
-      }
 
-      finally {
+      } finally {
 
         isSubmitting = false;
-
 
         setVoteButtonsDisabled(
           false
@@ -742,45 +701,23 @@
 
     function renderUI(data) {
 
-
-      if (
-        !data ||
-        !data.success
-      ) {
-
-        showError(
-
-          data
-            ? data.message
-            : 'データ解析に失敗しました。'
-
-        );
-
-        return;
-
-      }
-
-
       // --------------------------------------
-      // 表示切り替え
+      // ローディング終了
       // --------------------------------------
 
       document.getElementById(
         'loading'
-      ).style.display =
-        'none';
+      ).style.display = 'none';
 
 
       document.getElementById(
         'error'
-      ).style.display =
-        'none';
+      ).style.display = 'none';
 
 
       document.getElementById(
         'main-content'
-      ).style.display =
-        'block';
+      ).style.display = 'block';
 
 
       // --------------------------------------
@@ -797,42 +734,31 @@
         data.myStatus === '参加'
       ) {
 
-
         statusEl.className =
           'status-badge status-attend';
-
 
         statusEl.innerText =
           `参加 (${data.myCount}名)`;
 
 
-      }
-
-      else if (
+      } else if (
         data.myStatus === '不参加'
       ) {
 
-
         statusEl.className =
           'status-badge status-absent';
-
 
         statusEl.innerText =
           '不参加';
 
 
-      }
-
-      else {
-
+      } else {
 
         statusEl.className =
           'status-badge status-none';
 
-
         statusEl.innerText =
           '未回答';
-
       }
 
 
@@ -867,24 +793,19 @@
         data.attendeeList.length === 0
       ) {
 
-
         const empty =
           document.createElement(
             'div'
           );
 
-
         empty.style.fontSize =
           '0.85rem';
-
 
         empty.style.color =
           '#888';
 
-
         empty.textContent =
           '現在の参加予定者はいません';
-
 
         listEl.appendChild(
           empty
@@ -892,19 +813,20 @@
 
 
         return;
-
       }
 
 
+      // --------------------------------------
+      // 参加者一覧生成
+      // --------------------------------------
+
       data.attendeeList.forEach(
         item => {
-
 
           const div =
             document.createElement(
               'div'
             );
-
 
           div.className =
             'attendee-item';
@@ -915,7 +837,6 @@
               'span'
             );
 
-
           name.textContent =
             item.name;
 
@@ -925,7 +846,6 @@
               'strong'
             );
 
-
           count.textContent =
             `${item.count}名`;
 
@@ -933,7 +853,6 @@
           div.appendChild(
             name
           );
-
 
           div.appendChild(
             count
@@ -963,11 +882,9 @@
           '.vote-button'
         )
         .forEach(
-          btn => {
-
-            btn.disabled =
+          button => {
+            button.disabled =
               disabled;
-
           }
         );
 
@@ -975,7 +892,7 @@
 
 
     // ==========================================
-    // トースト
+    // トースト表示
     // ==========================================
 
     function showToast(
@@ -1035,7 +952,13 @@
         );
 
 
-      errorEl.innerText =
+      const messageEl =
+        document.getElementById(
+          'error-message'
+        );
+
+
+      messageEl.innerText =
         message;
 
 
@@ -1046,7 +969,150 @@
 
 
     // ==========================================
+    // ユーザー向けエラーメッセージ
+    // ==========================================
+
+    function getUserFriendlyErrorMessage(
+      error
+    ) {
+
+      if (!error) {
+
+        return (
+          '予期しないエラーが発生しました。'
+        );
+      }
+
+
+      const message =
+        error.message ||
+        String(error);
+
+
+      // --------------------------------------
+      // GASから返ってくる既知のエラー
+      // --------------------------------------
+
+      if (
+        message.includes(
+          'ユーザー認証情報'
+        )
+      ) {
+
+        return (
+          'LINEのユーザー認証に失敗しました。' +
+          '\nLINEアプリからもう一度開いてください。'
+        );
+      }
+
+
+      if (
+        message.includes(
+          'LINEユーザー認証に失敗'
+        )
+      ) {
+
+        return (
+          'LINEのユーザー認証に失敗しました。' +
+          '\nページを閉じて、もう一度お試しください。'
+        );
+      }
+
+
+      if (
+        message.includes(
+          '開催日の形式'
+        )
+      ) {
+
+        return (
+          '開催日の情報が正しくありません。'
+        );
+      }
+
+
+      if (
+        message.includes(
+          '存在しない開催日'
+        )
+      ) {
+
+        return (
+          '開催日の情報が正しくありません。'
+        );
+      }
+
+
+      if (
+        message.includes(
+          '参加人数'
+        )
+      ) {
+
+        return (
+          '参加人数の指定が正しくありません。'
+        );
+      }
+
+
+      if (
+        message.includes(
+          '不参加'
+        )
+      ) {
+
+        return (
+          '出欠情報の指定が正しくありません。'
+        );
+      }
+
+
+      if (
+        message.includes(
+          'アクセスが集中'
+        )
+      ) {
+
+        return (
+          '現在アクセスが集中しています。' +
+          '\n少し待ってからもう一度お試しください。'
+        );
+      }
+
+
+      if (
+        message.includes(
+          '通信'
+        ) ||
+        message.includes(
+          'Failed to fetch'
+        )
+      ) {
+
+        return (
+          'サーバーとの通信に失敗しました。' +
+          '\n電波の良い場所で、もう一度お試しください。'
+        );
+      }
+
+
+      // --------------------------------------
+      // その他
+      // --------------------------------------
+
+      return (
+        message ||
+        '処理中にエラーが発生しました。' +
+        '\n時間をおいてもう一度お試しください。'
+      );
+
+    }
+
+
+    // ==========================================
     // デフォルト開催日
+    //
+    // 毎週金曜日
     // ==========================================
 
     function getDefaultTargetDate() {
@@ -1059,8 +1125,9 @@
         d.getDay();
 
 
+      // 金曜日 = 5
       const diff =
-        (6 - day + 7) % 7 || 7;
+        (5 - day + 7) % 7 || 7;
 
 
       d.setDate(
@@ -1099,5 +1166,4 @@
   </script>
 
 </body>
-
 </html>
